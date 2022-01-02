@@ -9,10 +9,30 @@ export default function ProjectComments({ project }) {
   const { user } = useAuthContext();
   const { updateDocument, response } = useFirestore("projects");
   const [newComment, setNewComment] = useState("");
+  const [newReply, setNewReply] = useState("");
+  const [isClicked, setIsClicked] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const commentToAdd = {
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      content: newComment,
+      createdAt: timestamp.fromDate(new Date()),
+      id: Math.random(),
+    };
+
+    await updateDocument(project.id, {
+      comments: [...project.comments, commentToAdd],
+    });
+    if (!response.error) {
+      setNewComment("");
+    }
+  };
+
+  const handleSubmitReply = async (e) => {
+    e.preventDefault();
     const commentToAdd = {
       displayName: user.displayName,
       photoURL: user.photoURL,
@@ -51,6 +71,19 @@ export default function ProjectComments({ project }) {
               <div className="comment-content">
                 <p>{comment.content}</p>
               </div>
+              <button onClick={() => setIsClicked(true)}>Reply</button>
+              {isClicked && (
+                <form className="add-comment" onSubmit={handleSubmitReply}>
+                  <label>
+                    <span>Add new comment:</span>
+                    <textarea
+                      onChange={(e) => setNewReply(e.target.value)}
+                      value={newReply}
+                    ></textarea>
+                  </label>
+                  <button className="btn">Add Reply</button>
+                </form>
+              )}
             </li>
           ))}
       </ul>
